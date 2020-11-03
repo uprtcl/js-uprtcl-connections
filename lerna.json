@@ -1,0 +1,4 @@
+{
+  "packages": ["ethereum", "holochain", "http", "ipfs", "orbitdb"],
+  "version": "0.0.1-beta.1"
+}
