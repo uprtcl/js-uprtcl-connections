@@ -2,7 +2,10 @@ import OrbitDB from 'orbit-db';
 import IPFS from 'ipfs';
 
 import OrbitDBSet from '@tabcat/orbit-db-set';
-import { IdentityProvider, Keystore } from '@tabcat/orbit-db-identity-provider-d';
+import {
+  IdentityProvider,
+  Keystore,
+} from '@tabcat/orbit-db-identity-provider-d';
 
 import { Logger } from '@uprtcl/micro-orchestrator';
 import { Connection, ConnectionOptions } from '@uprtcl/multiplatform';
@@ -15,7 +18,7 @@ import { EveesOrbitDBRootEntities } from './custom.stores';
 OrbitDB.addDatabaseType(OrbitDBSet.type, OrbitDBSet);
 OrbitDB.Identities.addIdentityProvider(IdentityProvider);
 
-const keystorePath = id => `./orbitdb/identity/odbipd-${id}`;
+const keystorePath = (id) => `./orbitdb/identity/odbipd-${id}`;
 
 export const loginMsg = `
 Please Read!
@@ -32,6 +35,8 @@ interface Status {
   logged: boolean;
 }
 
+const ENABLE_LOG = false;
+
 export class OrbitDBCustom extends Connection {
   public instance: any;
   pinnedCache: PinnedCacheDB;
@@ -40,10 +45,10 @@ export class OrbitDBCustom extends Connection {
   readonly status: Status = {
     pinnerHttpConnected: false,
     pinnerPeerConnected: false,
-    logged: false
+    logged: false,
   };
 
-  logger = new Logger('OrbitDB-Connection');
+  logger = new Logger('OrbitDB-Custom');
 
   constructor(
     protected storeManifests: CustomStore[],
@@ -57,7 +62,7 @@ export class OrbitDBCustom extends Connection {
     super(options);
 
     /** register AccessControllers */
-    this.acls.map(AccessController => {
+    this.acls.map((AccessController) => {
       if (!OrbitDB.AccessControllers.isSupported(AccessController.type)) {
         OrbitDB.AccessControllers.addAccessController({ AccessController });
       }
@@ -83,7 +88,7 @@ export class OrbitDBCustom extends Connection {
 
     this.logger.log('Connected', {
       instance: this.instance,
-      identity: this.identity
+      identity: this.identity,
     });
   }
 
@@ -96,7 +101,7 @@ export class OrbitDBCustom extends Connection {
       EveesOrbitDBRootEntities.AddressMapping,
       {
         sourceId: this.identitySource.sourceId,
-        key: identity.id
+        key: identity.id,
       },
       true
     );
@@ -108,8 +113,13 @@ export class OrbitDBCustom extends Connection {
     );
 
     if (!signedAccountEntry) {
-      const signature = await this.identitySource.signText(mappingMsg(identity.id));
-      this.logger.log(`Address mapping added to store ${mappingStore.address}`, signature);
+      const signature = await this.identitySource.signText(
+        mappingMsg(identity.id)
+      );
+      this.logger.log(
+        `Address mapping added to store ${mappingStore.address}`,
+        signature
+      );
       await mappingStore.add(signature);
     }
 
@@ -131,7 +141,7 @@ export class OrbitDBCustom extends Connection {
       keystore: new Keystore(keystorePath(id)),
       type: IdentityProvider.type,
       id: id,
-      derive: sig
+      derive: sig,
     });
   }
 
@@ -140,12 +150,13 @@ export class OrbitDBCustom extends Connection {
   }
 
   public getManifest(type: string) {
-    return this.storeManifests.find(s => s.customType === type);
+    return this.storeManifests.find((s) => s.customType === type);
   }
 
   public async storeAddress(type: string, entity: any): Promise<string> {
     const storeManifest = this.getManifest(type);
-    if (storeManifest === undefined) throw new Error(`store if type ${type} not found`);
+    if (storeManifest === undefined)
+      throw new Error(`store if type ${type} not found`);
 
     return this.instance.determineAddress(
       storeManifest.name(entity),
@@ -158,7 +169,10 @@ export class OrbitDBCustom extends Connection {
     // this.logger.log(`${address} -- Openning store`);
     let db;
 
-    const hadDB = await this.instance._haveLocalData(this.instance.cache, address);
+    const hadDB = await this.instance._haveLocalData(
+      this.instance.cache,
+      address
+    );
 
     if (this.instance.stores[address]) {
       // this.logger.log(`${address} -- Store loaded. HadDB: ${hadDB}`);
@@ -167,10 +181,14 @@ export class OrbitDBCustom extends Connection {
       // this.logger.log(`${address} -- Store already queue. HadDB: ${hadDB}`);
       db = this.storeQueue[address];
     } else {
-      this.logger.log(`${address} -- Store init - first time. HadDB: ${hadDB}`);
+      if (ENABLE_LOG) {
+        this.logger.log(
+          `${address} -- Store init - first time. HadDB: ${hadDB}`
+        );
+      }
       db = this.storeQueue[address] = this.instance
         .open(address, { identity: this.identity })
-        .then(async store => {
+        .then(async (store) => {
           await store.load();
           return store;
         })
@@ -180,19 +198,28 @@ export class OrbitDBCustom extends Connection {
     db = await db;
 
     if (db.identity.id !== this.identity.id) db.setIdentity(this.identity);
-    this.logger.log(`${db.address} -- Opened. HadDB: ${hadDB}`);
+    if (ENABLE_LOG) {
+      this.logger.log(`${db.address} -- Opened. HadDB: ${hadDB}`);
+    }
 
     if (!hadDB) {
-      const result = await fetch(`${this.pinnerUrl}/includes?address=${address}`, {
-        method: 'GET'
-      });
+      const result = await fetch(
+        `${this.pinnerUrl}/includes?address=${address}`,
+        {
+          method: 'GET',
+        }
+      );
 
       const { includes } = await result.json();
 
       if (includes) {
-        this.logger.log(`${db.address} -- Awaiting replication. HadDB: ${hadDB}`);
-        await new Promise(resolve => {
-          db.events.on('replicated', async r => {
+        if (ENABLE_LOG) {
+          this.logger.log(
+            `${db.address} -- Awaiting replication. HadDB: ${hadDB}`
+          );
+        }
+        await new Promise((resolve) => {
+          db.events.on('replicated', async (r) => {
             this.logger.log(`${r} -- Replicated`);
             resolve();
           });
@@ -205,7 +232,11 @@ export class OrbitDBCustom extends Connection {
     return db;
   }
 
-  public async getStore(type: string, entity?: any, pin: boolean = false): Promise<any> {
+  public async getStore(
+    type: string,
+    entity?: any,
+    pin: boolean = false
+  ): Promise<any> {
     const address = await this.storeAddress(type, entity);
     const store = this.openStore(address);
     if (pin) {
@@ -226,10 +257,12 @@ export class OrbitDBCustom extends Connection {
       const addr = address.toString();
       const pinned = await this.pinnedCache.pinned.get(addr);
       if (!pinned) {
-        this.logger.log(`pinning`, addr);
+        if (ENABLE_LOG) {
+          this.logger.log(`pinning`, addr);
+        }
         fetch(`${this.pinnerUrl}/pin?address=${addr}`, {
-          method: 'GET'
-        }).then(response => {
+          method: 'GET',
+        }).then((response) => {
           this.pinnedCache.pinned.put({ id: addr });
         });
       }
