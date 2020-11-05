@@ -6,7 +6,7 @@ import {
   defaultCidConfig,
   CASStore,
   Connection,
-  ConnectionOptions
+  ConnectionOptions,
 } from '@uprtcl/multiplatform';
 import { Logger } from '@uprtcl/micro-orchestrator';
 
@@ -21,6 +21,10 @@ export interface PutConfig {
   cidVersion: number;
   pin?: boolean;
 }
+
+const WAIT = 1000;
+const ATTEMPTS = 0;
+const ENABLE_LOG = false;
 
 export class IpfsStore extends Connection implements CASStore {
   logger = new Logger('IpfsStore');
@@ -47,13 +51,20 @@ export class IpfsStore extends Connection implements CASStore {
     }
   }
 
-  public tryPut(buffer: any, putConfig: object, wait: number, attempt: number): Promise<any> {
+  public tryPut(
+    buffer: any,
+    putConfig: object,
+    wait: number,
+    attempt: number
+  ): Promise<any> {
     return new Promise((resolve, reject) => {
-      this.logger.log(`Try put. Remaining attempts: ${attempt}`, {
-        client: this.client,
-        buffer,
-        putConfig
-      });
+      if (ENABLE_LOG) {
+        this.logger.log(`Try put. Remaining attempts: ${attempt}`, {
+          client: this.client,
+          buffer,
+          putConfig,
+        });
+      }
 
       let timeout;
       if (attempt > 0) {
@@ -61,7 +72,7 @@ export class IpfsStore extends Connection implements CASStore {
         timeout = setTimeout(() => {
           this.tryPut(buffer, putConfig, wait * 2, attempt - 1)
             .then((result: any) => resolve(result))
-            .catch(e => reject(e));
+            .catch((e) => reject(e));
         }, wait);
       }
 
@@ -71,13 +82,16 @@ export class IpfsStore extends Connection implements CASStore {
           clearTimeout(timeout);
           resolve(result);
         })
-        .catch(e => {
-          this.logger.error(`Error putting object on IPFS on attempt: ${attempt}`, {
-            e,
-            client: this.client,
-            buffer,
-            putConfig
-          });
+        .catch((e) => {
+          this.logger.error(
+            `Error putting object on IPFS on attempt: ${attempt}`,
+            {
+              e,
+              client: this.client,
+              buffer,
+              putConfig,
+            }
+          );
         });
     });
   }
@@ -90,7 +104,11 @@ export class IpfsStore extends Connection implements CASStore {
     }
 
     return new Promise((resolve, reject) => {
-      this.logger.log(`Trying to get ${hash}. Remaining attempts: ${attempt}`);
+      if (ENABLE_LOG) {
+        this.logger.log(
+          `Trying to get ${hash}. Remaining attempts: ${attempt}`
+        );
+      }
 
       let found = false;
 
@@ -98,8 +116,8 @@ export class IpfsStore extends Connection implements CASStore {
       if (attempt > 0) {
         timeout = setTimeout(() => {
           this.tryGet(hash, wait * 2, attempt - 1)
-            .then(result => resolve(result))
-            .catch(e => {
+            .then((result) => resolve(result))
+            .catch((e) => {
               if (!found) reject(e);
             });
         }, wait);
@@ -123,38 +141,46 @@ export class IpfsStore extends Connection implements CASStore {
   private async putIpfs(object: object) {
     const sorted = sortObject(object);
     const buffer = CBOR.encode(sorted);
-    this.logger.log(`Trying to add object:`, { object, sorted, buffer });
+    if (ENABLE_LOG) {
+      this.logger.log(`Trying to add object:`, { object, sorted, buffer });
+    }
 
     let putConfig: PutConfig = {
       format: this.cidConfig.codec,
       hashAlg: this.cidConfig.type,
       cidVersion: this.cidConfig.version,
-      pin: true
+      pin: true,
     };
 
     /** recursively try */
-    return this.tryPut(buffer, putConfig, 1000, 6)
+    return this.tryPut(buffer, putConfig, WAIT, ATTEMPTS)
       .then((result: any) => {
         let hashString = result.toString(this.cidConfig.base);
-        this.logger.log(`Object stored`, {
-          object,
-          sorted,
-          buffer,
-          hashString
-        });
+        if (ENABLE_LOG) {
+          this.logger.log(`Object stored`, {
+            object,
+            sorted,
+            buffer,
+            hashString,
+          });
+        }
         if (this.pinnerUrl) {
-          this.pinnedCache.pinned.get(hashString).then(pinned => {
+          this.pinnedCache.pinned.get(hashString).then((pinned) => {
             if (!pinned) {
-              this.logger.log(`pinning`, hashString);
-              fetch(`${this.pinnerUrl}/pin_hash?cid=${hashString}`).then(response => {
-                this.pinnedCache.pinned.put({ id: hashString });
-              });
+              if (ENABLE_LOG) {
+                this.logger.log(`pinning`, hashString);
+              }
+              fetch(`${this.pinnerUrl}/pin_hash?cid=${hashString}`).then(
+                (response) => {
+                  this.pinnedCache.pinned.put({ id: hashString });
+                }
+              );
             }
           });
         }
         return hashString;
       })
-      .catch(e => {
+      .catch((e) => {
         this.logger.error('error', e);
         throw new Error('Sorry but it seems impossible to store this on IPFS');
       });
@@ -166,15 +192,20 @@ export class IpfsStore extends Connection implements CASStore {
   async get(hash: string): Promise<object | undefined> {
     /** recursively try */
     if (!hash) throw new Error('hash undefined or empty');
-    return this.tryGet(hash, 1000, 6)
-      .then(raw => {
+    return this.tryGet(hash, WAIT, ATTEMPTS)
+      .then((raw) => {
         const forceBuffer = Uint8Array.from(raw.value);
         let object = CBOR.decode(forceBuffer.buffer);
-        this.logger.log(`Object retrieved ${hash}`, { raw, object });
+        if (ENABLE_LOG) {
+          this.logger.log(`Object retrieved ${hash}`, { raw, object });
+        }
         return object;
       })
-      .catch(e => {
-        this.logger.warn(`Object with ${hash} not found in IPFS, returning undefined`, e);
+      .catch((e) => {
+        this.logger.warn(
+          `Object with ${hash} not found in IPFS, returning undefined`,
+          e
+        );
         return undefined;
       });
   }
