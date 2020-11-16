@@ -2,7 +2,6 @@ import { injectable } from 'inversify';
 import { Auth0Client, Auth0ClientOptions } from '@auth0/auth0-spa-js';
 
 import { Logger } from '@uprtcl/micro-orchestrator';
-import { Remote } from '@uprtcl/evees';
 
 import { HttpProvider, HttpProviderOptions } from './http.provider';
 
