@@ -4,6 +4,7 @@
   "description": "_Prtcl provider wrappers around the native fetch api",
   "homepage": "https://uprtcl.io",
   "scripts": {
+    "update-uprtcl": "ncu -u \"/^@uprtcl.*$/\"",
     "clean": "rimraf dist",
     "dev": "rollup -w -c rollup.config.ts",
     "build": "npm run clean && rollup -c rollup.config.ts",
@@ -12,12 +13,12 @@
   },
   "dependencies": {
     "@auth0/auth0-spa-js": "^1.11.0",
-    "@uprtcl/cortex": "^0.1.0-beta.4",
-    "@uprtcl/ethereum-provider": "^0.1.0-beta.6",
     "@uprtcl/evees": "0.1.0-beta.8",
-    "@uprtcl/ipfs-provider": "^0.1.0-beta.6",
+    "@uprtcl/cortex": "^0.1.0-beta.4",
     "@uprtcl/micro-orchestrator": "^0.1.0-beta.4",
     "@uprtcl/multiplatform": "^0.1.0-beta.4",
+    "@uprtcl/ethereum-provider": "^0.1.0-beta.6",
+    "@uprtcl/ipfs-provider": "^0.1.0-beta.6",
     "inversify": "^5.0.1",
     "lit-element": "^2.3.0",
     "reflect-metadata": "^0.1.13"
@@ -39,7 +40,8 @@
     "temp-dir": "^2.0.0",
     "ts-loader": "^6.2.2",
     "typescript": "^3.8.3",
-    "webpack": "^4.42.1"
+    "webpack": "^4.42.1",
+    "npm-check-updates": "^10.2.1"
   },
   "repository": {
     "type": "git",

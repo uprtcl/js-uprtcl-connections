@@ -4,6 +4,7 @@
   "description": "Orbitdb wrapper that can be programed with different custom stores",
   "homepage": "https://uprtcl.io",
   "scripts": {
+    "update-uprtcl": "ncu -u \"/^@uprtcl.*$/\"",
     "clean": "rimraf dist",
     "dev": "rollup -w -c rollup.config.ts",
     "build": "npm run clean && rollup -c rollup.config.ts",
@@ -18,7 +19,8 @@
     "@uprtcl/multiplatform": "^0.1.0-beta.4",
     "ipfs": "^0.50.2",
     "orbit-db": "^0.26.0",
-    "reflect-metadata": "^0.1.13"
+    "reflect-metadata": "^0.1.13",
+    "npm-check-updates": "^10.2.1"
   },
   "devDependencies": {
     "@open-wc/testing": "^2.5.6",
@@ -37,7 +39,8 @@
     "temp-dir": "^2.0.0",
     "ts-loader": "^6.2.2",
     "typescript": "^3.8.3",
-    "webpack": "^4.42.1"
+    "webpack": "^4.42.1",
+    "npm-check-updates": "^10.2.1"
   },
   "repository": {
     "type": "git",
