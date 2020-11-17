@@ -1,6 +1,6 @@
 {
   "name": "@uprtcl/orbitdb-provider",
-  "version": "0.1.0-beta.6",
+  "version": "0.1.0-beta.7",
   "description": "Orbitdb wrapper that can be programed with different custom stores",
   "homepage": "https://uprtcl.io",
   "scripts": {
@@ -14,13 +14,13 @@
   "dependencies": {
     "@tabcat/orbit-db-identity-provider-d": "^1.0.0",
     "@tabcat/orbit-db-set": "^2.0.0",
-    "@uprtcl/ipfs-provider": "^0.1.0-beta.6",
+    "@uprtcl/ipfs-provider": "^0.1.0-beta.7",
     "@uprtcl/micro-orchestrator": "^0.1.0-beta.4",
     "@uprtcl/multiplatform": "^0.1.0-beta.4",
     "ipfs": "^0.50.2",
+    "npm-check-updates": "^10.2.1",
     "orbit-db": "^0.26.0",
-    "reflect-metadata": "^0.1.13",
-    "npm-check-updates": "^10.2.1"
+    "reflect-metadata": "^0.1.13"
   },
   "devDependencies": {
     "@open-wc/testing": "^2.5.6",
@@ -32,6 +32,7 @@
     "karma": "^4.4.1",
     "karma-webpack": "^4.0.2",
     "lit-html": "^1.1.2",
+    "npm-check-updates": "^10.2.1",
     "rimraf": "^2.6.2",
     "rollup": "^2.0.5",
     "rollup-plugin-sourcemaps": "^0.5.0",
@@ -39,8 +40,7 @@
     "temp-dir": "^2.0.0",
     "ts-loader": "^6.2.2",
     "typescript": "^3.8.3",
-    "webpack": "^4.42.1",
-    "npm-check-updates": "^10.2.1"
+    "webpack": "^4.42.1"
   },
   "repository": {
     "type": "git",
