@@ -165,6 +165,18 @@ export class OrbitDBCustom extends Connection {
     );
   }
 
+  public async isPinned(address: string) {
+    const result = await fetch(
+      `${this.pinnerUrl}/includes?address=${address}`,
+      {
+        method: 'GET',
+      }
+    );
+
+    const { includes } = await result.json();
+    return includes;
+  }
+
   private async openStore(address: string | any): Promise<any> {
     // this.logger.log(`${address} -- Openning store`);
     let db;
@@ -203,16 +215,7 @@ export class OrbitDBCustom extends Connection {
     }
 
     if (!hadDB) {
-      const result = await fetch(
-        `${this.pinnerUrl}/includes?address=${address}`,
-        {
-          method: 'GET',
-        }
-      );
-
-      const { includes } = await result.json();
-
-      if (includes) {
+      if (await this.isPinned(db.address)) {
         if (ENABLE_LOG) {
           this.logger.log(
             `${db.address} -- Awaiting replication. HadDB: ${hadDB}`
@@ -243,6 +246,36 @@ export class OrbitDBCustom extends Connection {
       this.pin(address);
     }
     return store;
+  }
+
+  public async getAll(address: string) {
+    if (this.pinnerUrl) {
+      const addr = address.toString();
+
+      if (ENABLE_LOG) {
+        this.logger.log(`getting from`, addr);
+      }
+      const result = await fetch(`${this.pinnerUrl}/getAll?address=${addr}`, {
+        method: 'GET',
+      });
+
+      return result.json();
+    }
+  }
+
+  public async getEntity(hash: string) {
+    if (this.pinnerUrl) {
+      const addr = hash.toString();
+
+      if (ENABLE_LOG) {
+        this.logger.log(`getting from`, addr);
+      }
+      const result = await fetch(`${this.pinnerUrl}/getEntity?cid=${addr}`, {
+        method: 'GET',
+      });
+
+      return result.json();
+    }
   }
 
   public async dropStore(type: string, entity?: any): Promise<any> {

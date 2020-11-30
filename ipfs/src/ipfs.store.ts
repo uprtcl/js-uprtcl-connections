@@ -119,13 +119,16 @@ export class IpfsStore extends Connection implements CASStore {
     /** recursively try */
     if (!hash) throw new Error('hash undefined or empty');
 
-    const raw = await promiseWithTimeout(this.client.dag.get(hash), 10000);
-
-    const forceBuffer = Uint8Array.from(raw.value);
-    let object = CBOR.decode(forceBuffer.buffer);
-    if (ENABLE_LOG) {
-      this.logger.log(`Object retrieved ${hash}`, { raw, object });
+    try {
+      const raw = await promiseWithTimeout(this.client.dag.get(hash), 10000);
+      const forceBuffer = Uint8Array.from(raw.value);
+      let object = CBOR.decode(forceBuffer.buffer);
+      if (ENABLE_LOG) {
+        this.logger.log(`Object retrieved ${hash}`, { raw, object });
+      }
+      return object;
+    } catch (e) {
+      throw new Error(`Error reading ${hash}`);
     }
-    return object;
   }
 }
