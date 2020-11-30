@@ -6,6 +6,10 @@ import { Remote } from '@uprtcl/evees';
 
 import { HttpProvider, HttpProviderOptions } from './http.provider';
 
+export const loginMessage = (nonce: string) => {
+  return `Login to Intercreativiy \n\nnonce:${nonce}`;
+};
+
 @injectable()
 export class HttpEthAuthProvider extends HttpProvider implements Remote {
   logger = new Logger('HTTP-ETH-Provider');
@@ -81,7 +85,7 @@ export class HttpEthAuthProvider extends HttpProvider implements Remote {
 
     const nonce = await this.getNonce();
     const signature = await this.ethConnection.signText(
-      `Login to Uprtcl Evees HTTP Server \n\nnonce:${nonce}`,
+      loginMessage(nonce),
       this.account
     );
     const token = await this.authorize(signature);
