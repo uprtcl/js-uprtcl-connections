@@ -184,12 +184,18 @@ export class HttpConnection extends Connection {
       },
       body: JSON.stringify(body),
     })
-      .then((response) => {
+      .then(response => {
+        if(!response.ok) {
+          throw Error(response.statusText);
+        }
         return response.json() as Promise<PostResult>;
       })
-      .then((data) => {
+      .then(data => {
         this.logger.log('[HTTP POST RESULT]', url, body, data);
         return (data as unknown) as PostResult;
+      }).catch(err => {
+        this.logger.error('[HTTP POST ERROR]', url, body, err) 
+        return (err as unknown) as PostResult;
       });
   }
 }
