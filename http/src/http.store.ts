@@ -23,12 +23,21 @@ export class HttpStore implements CASStore {
     return this.provider.getObject<object>(`/get/${hash}`);
   }
 
-  async create(object: object, hash?: string): Promise<string> {
-    this.logger.log('Creating Entity', { object, hash });
+  async create(object: object, hash?: string, attempts?: number): Promise<string> {
+    this.logger.log('Creating Entity', { object, hash });   
     const result = await this.provider.post(`/data`, {
       id: hash ? hash : '',
       object: object
     });
-    return result.elementIds[0];
+
+    if(result.elementIds === undefined) {
+      if(attempts && attempts > 0) {
+        return await this.create(object, hash, attempts - 1);
+      } else {
+        throw new Error('Could not create data...');
+      }
+    } else {
+      return result.elementIds[0];
+    }    
   }
 }
