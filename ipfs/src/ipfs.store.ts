@@ -12,7 +12,7 @@ import { Logger } from '@uprtcl/micro-orchestrator';
 
 import { IpfsConnectionOptions } from './types';
 import { sortObject } from './utils';
-import { PinnedCacheDB } from './pinner.cache';
+import { PinnerCached } from './pinner';
 
 export interface PutConfig {
   format: string;
@@ -39,18 +39,16 @@ const promiseWithTimeout = (
 
 export class IpfsStore extends Connection implements CASStore {
   logger = new Logger('IpfsStore');
-  pinnedCache: PinnedCacheDB;
 
   casID = 'ipfs';
 
   constructor(
     public cidConfig: CidConfig = defaultCidConfig,
     protected client?: any,
-    protected pinnerUrl?: string,
+    protected pinner?: PinnerCached,
     connectionOptions: ConnectionOptions = {}
   ) {
     super(connectionOptions);
-    this.pinnedCache = new PinnedCacheDB(`pinned-at-${this.pinnerUrl}`);
   }
 
   /**
@@ -95,20 +93,9 @@ export class IpfsStore extends Connection implements CASStore {
         hashString,
       });
     }
-    if (this.pinnerUrl) {
-      this.pinnedCache.pinned.get(hashString).then((pinned) => {
-        if (!pinned) {
-          if (ENABLE_LOG) {
-            this.logger.log(`pinning`, hashString);
-          }
-          fetch(`${this.pinnerUrl}/pin_hash?cid=${hashString}`).then(
-            (response) => {
-              this.pinnedCache.pinned.put({ id: hashString });
-            }
-          );
-        }
-      });
-    }
+
+    if (this.pinner) this.pinner.pin(hashString);
+
     return hashString;
   }
 
