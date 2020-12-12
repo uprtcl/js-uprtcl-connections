@@ -200,7 +200,8 @@ export class OrbitDBCustom extends Connection {
     }
 
     if (!hadDB) {
-      if (await this.pinner.isPinned(db.address)) {
+      // wait for replication the first time I read this DB.
+      if (this.pinner && (await this.pinner.isPinned(db.address))) {
         if (ENABLE_LOG) {
           this.logger.log(
             `${db.address} -- Awaiting replication. HadDB: ${hadDB}`
@@ -241,7 +242,7 @@ export class OrbitDBCustom extends Connection {
   }
 
   public async pin(address: string) {
-    this.pinner.pin(address.toString());
+    if (this.pinner) this.pinner.pin(address.toString());
   }
 
   public async unpin(address: string) {
