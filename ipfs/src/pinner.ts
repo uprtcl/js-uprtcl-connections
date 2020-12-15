@@ -8,7 +8,7 @@ export class PinnerCached {
 
   constructor(protected url: string, flushInterval: number) {
     this.cache = new PinnerCacheDB(`pinner-cache-${url}`);
-    setInterval(() => this.flushCache(), flushInterval);
+    setInterval(() => this.flush(), flushInterval);
   }
 
   async pin(hash: string) {
@@ -49,7 +49,7 @@ export class PinnerCached {
     return result.json();
   }
 
-  async flushCache() {
+  async flush() {
     if (!this.cache) throw new Error('cache not initialized');
     if (this.isFlusshing) return;
 

@@ -53,7 +53,7 @@ export class OrbitDBCustom extends Connection {
     protected storeManifests: CustomStore[],
     protected acls: any[],
     protected identitySource: IdentitySource,
-    protected pinner?: PinnerCached,
+    public pinner?: PinnerCached,
     protected pinnerMultiaddr?: string,
     public ipfs?: any,
     options?: ConnectionOptions
